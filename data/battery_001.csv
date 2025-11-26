@@ -1,0 +1,16 @@
+Attribute,Value
+Battery_ID,BATTERY-001
+Model,Flux Capacitor X1
+Manufacturer,Doc Industries
+Production_Date,1985-10-26
+Chemistry,Lithium-Ion
+State_of_Health,92%
+Voltage,400V
+Capacity,85 kWh
+Cycles_Count,124
+Temperature,32°C
+Status,Original
+Owner,Doc Brown
+Last_Service,2025-11-20
+Fault_Flag,None
+Recyclable,Yes
