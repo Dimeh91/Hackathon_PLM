@@ -51,4 +51,4 @@ if qr_value:
     st.session_state["battery_id"] = qr_value
 
     # Bouton vers la page Battery Data
-    st.page_link("pages/2_Battery_Data.py", label="➡️ Voir les données de la batterie")
+    st.page_link("pages/2_Battery_Data.py", label="➡️ Voir les datas de la batterie")
