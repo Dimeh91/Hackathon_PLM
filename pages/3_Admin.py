@@ -69,3 +69,5 @@ edited_df = st.data_editor(df, hide_index=True, num_rows="dynamic")
 if st.button("💾 Sauvegarder les modifications"):
     edited_df.to_csv(f"data/{battery_choice}", index=False)
     st.success("Modifications enregistrées avec succès !")
+
+st.write("Chemin réel :", os.path.abspath(f"data/{battery_choice}"))
