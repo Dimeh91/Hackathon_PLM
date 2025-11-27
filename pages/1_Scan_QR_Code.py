@@ -7,7 +7,7 @@ st.title("📷 Scan QR Code")
 st.write("Scannez un QR code pour charger les données de la batterie.")
 
 # Input caché – reçoit la valeur depuis le JS
-qr_value = st.text_input("QR détecté", key="decodedText", label_visibility="collapsed")
+qr_value = st.text_input("QR détecté", key="qr_value", label_visibility="collapsed")
 
 # Scanner HTML + JS
 components.html(
