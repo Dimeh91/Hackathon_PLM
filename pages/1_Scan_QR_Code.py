@@ -4,71 +4,54 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Scan QR Code", page_icon="📷", layout="wide")
 
 st.title("📷 Scan QR Code")
-st.write("Pointez votre caméra vers un QR code.")
+st.write("Scannez un QR code pour charger les données de la batterie.")
 
-# HTML + JS QR Scanner
-qr_scanner = """
-<!DOCTYPE html>
-<html>
-  <body>
-    <div id="reader" width="600px"></div>
+# 1) PREPARER LE SCANNER HTML/JS
+scanner_html = """
+<div id="reader" style="width: 700px"></div>
 
-    <script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
-    <script>
-      function onScanSuccess(decodedText) {
-        // Send QR code data to Streamlit
-        window.parent.postMessage({ "qrData": decodedText }, "*");
-      }
+<script>
+    function onScanSuccess(decodedText) {
+        // Envoi direct à Streamlit via query params
+        const url = new URL(window.location.href);
+        url.searchParams.set("qr_value", decodedText);
 
-      function onScanFailure(error) {
-        // Ignore scan errors
-      }
+        // Recharge la page AVEC le QR code
+        window.location.href = url.toString();
+    }
 
-      let scanner = new Html5QrcodeScanner(
+    function onScanFailure(error) {
+        // ignore
+    }
+
+    const scanner = new Html5QrcodeScanner(
         "reader",
         { fps: 10, qrbox: 250 },
         false
-      );
-      scanner.render(onScanSuccess, onScanFailure);
-    </script>
-  </body>
-</html>
+    );
+
+    scanner.render(onScanSuccess, onScanFailure);
+</script>
 """
 
-# Show scanner
-components.html(qr_scanner, height=500)
+# 2) AFFICHER LE SCANNER
+components.html(scanner_html, height=500)
 
-# Listen to messages sent from JavaScript
-qr_container = st.empty()
+# 3) RECUPERER LE QR DANS STREAMLIT (nouveau système)
+params = st.query_params
+qr_value = params.get("qr_value", None)
 
-# FIX : Replace all experimental features with st.query_params updates
-if "qrData" not in st.session_state:
-    st.session_state["qrData"] = None
+# 4) AFFICHER LE RESULTAT
+if qr_value:
+    qr_value = qr_value[0]  # toujours une liste
+    st.success(f"QR Code détecté : **{qr_value}**")
 
-# Capture JS → Streamlit messages
-def process_qr_message():
-    # Streamlit listens to browser messages automatically
-    if st.session_state["qrData"]:
-        return st.session_state["qrData"]
-    return None
+    # stocker dans session
+    st.session_state["battery_id"] = qr_value
 
-# Button to manually trigger read (works when the browser sends a message)
-if "qrData" not in st.query_params:
-    st.query_params["qrData"] = None
-
-# Detect new QR values sent from frontend
-if st.session_state.get("qrData") != st.query_params.get("qrData"):
-    st.session_state["qrData"] = st.query_params.get("qrData")
-
-# Display QR code value
-qr_result = st.session_state["qrData"]
-
-if qr_result:
-    st.success(f"QR détecté : **{qr_result}**")
-
-    # Save scanned ID
-    st.session_state["battery_id"] = qr_result
-
-    # Redirect button
+    # bouton pour aller à la page CSV
     st.page_link("pages/2_Battery_Data.py", label="➡️ Voir les données de la batterie")
+else:
+    st.info("Aucun QR code détecté pour l'instant.")
