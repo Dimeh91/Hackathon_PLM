@@ -6,61 +6,45 @@ st.set_page_config(page_title="Scan QR Code", page_icon="📷", layout="wide")
 st.title("📷 Scan QR Code")
 st.write("Scannez un QR code pour charger les données de la batterie.")
 
-# Placeholder pour afficher le résultat
-result = st.empty()
+# Champ caché qui recevra le QR
+qr_value = st.text_input("QR détecté (invisible)", key="qr_value", label_visibility="collapsed")
 
-# JS + HTML du scanner
+# Scanner QR en HTML + JS
 scanner_html = """
-<div id="reader" style="width: 700px"></div>
+<div id="reader" style="width: 500px"></div>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-    function onScanSuccess(decodedText) {
-        // Envoyer vers Streamlit via postMessage
-        const message = {type: "qr_scanned", data: decodedText};
-        window.parent.postMessage(message, "*");
-    }
+function onScanSuccess(decodedText) {
+    // Injecter la valeur dans un input Streamlit invisible
+    const inputBox = window.parent.document.querySelector('input[id="qr_value"]');
+    inputBox.value = decodedText;
 
-    function onScanFailure(error) {
-        // silence
-    }
+    // Déclencher un event 'input' pour que Streamlit capte la valeur
+    const event = new Event('input', { bubbles: true });
+    inputBox.dispatchEvent(event);
+}
 
-    const scanner = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: 250 },
-        false
-    );
-    scanner.render(onScanSuccess, onScanFailure);
+function onScanFailure(error) {
+    // ignore
+}
+
+const scanner = new Html5QrcodeScanner(
+    "reader",
+    { fps: 10, qrbox: 250 },
+    false
+);
+scanner.render(onScanSuccess, onScanFailure);
 </script>
 """
 
-components.html(scanner_html, height=500)
+components.html(scanner_html, height=400)
 
-# Réception JS -> Streamlit
-qr_receiver = """
-<script>
-window.addEventListener("message", (event) => {
-    if (event.data && event.data.type === "qr_scanned") {
-        const qrValue = event.data.data;
-        window.parent.postMessage(
-            {isStreamlitMessage: true, qrValue: qrValue},
-            "*"
-        );
-    }
-});
-</script>
-"""
+# Si QR détecté → afficher confirmation + bouton
+if qr_value not in ("", None):
+    st.success(f"QR Code détecté : {qr_value}")
 
-st.markdown(qr_receiver, unsafe_allow_html=True)
+    st.session_state["battery_id"] = qr_value
 
-# Lire la valeur envoyée par JS
-if "qrValue" not in st.session_state:
-    st.session_state["qrValue"] = None
-
-# AFFICHER LA VALEUR DU QR CODE DÉTECTÉ
-if st.session_state["qrValue"]:
-    result.success(f"QR Code détecté : {st.session_state['qrValue']}")
-    st.session_state["battery_id"] = st.session_state["qrValue"]
-
-    st.page_link("pages/2_Battery_Data.py", label="➡️ Voir les données")
+    st.page_link("pages/2_Battery_Data.py", label="➡️ Voir les données de la batterie")
