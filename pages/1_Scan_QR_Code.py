@@ -11,7 +11,7 @@ result = st.empty()
 
 # JS + HTML du scanner
 scanner_html = """
-<div id="reader" style="width: 320px"></div>
+<div id="reader" style="width: 700px"></div>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
