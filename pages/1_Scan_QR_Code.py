@@ -1,16 +1,55 @@
-import cv2
-import numpy as np
 import streamlit as st
+import streamlit.components.v1 as components
 
-image = st.camera_input("Show QR code")
+st.set_page_config(page_title="Scan QR Code", page_icon="📷", layout="wide")
 
-if image is not None:
-    bytes_data = image.getvalue()
-    cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+st.title("📷 Scan QR Code")
+st.write("Scannez un QR code pour charger les données de la batterie.")
 
-    detector = cv2.QRCodeDetector()
+# Champ caché pour récupérer la valeur du QR
+qr_value = st.text_input("", key="qr_value", label_visibility="collapsed")
 
-    data, bbox, straight_qrcode = detector.detectAndDecode(cv2_img)
+# Scanner HTML + JS : fonctionne sur Streamlit Cloud
+components.html(
+    """
+    <script src="https://unpkg.com/html5-qrcode"></script>
 
-    st.write("Here!")
-    st.write(data)
+    <div id="reader" style="width: 320px; margin: auto;"></div>
+
+    <script>
+    function onScanSuccess(decodedText) {
+
+        // Trouver le champ Streamlit
+        const inputBox = window.parent.document.querySelector('input[id="qr_value"]');
+
+        if (inputBox) {
+            inputBox.value = decodedText;
+            inputBox.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+
+    function onScanFailure(error) {
+        // Rien
+    }
+
+    // Lancer le scanner
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", 
+        { fps: 10, qrbox: 250 },
+        false
+    );
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    </script>
+    """,
+    height=500
+)
+
+# Traitement Streamlit si QR détecté
+if qr_value:
+    st.success(f"QR Code détecté : **{qr_value}**")
+
+    # Stocker la valeur scannée dans la session
+    st.session_state["battery_id"] = qr_value
+
+    # Bouton vers la page des données
+    st.page_link("pages/2_Battery_Data.py", label="➡️ Voir les données de cette batterie")
