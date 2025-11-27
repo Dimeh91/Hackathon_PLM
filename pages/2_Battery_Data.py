@@ -6,23 +6,35 @@ st.set_page_config(page_title="Battery Data", page_icon="📄", layout="wide")
 
 st.title("📄 Battery Passport Data")
 
-# Récupération de l'ID stocké par la page Scan QR
 battery_id = st.session_state.get("battery_id", None)
 
 if battery_id is None:
-    st.error("Aucun QR code n'a été scanné. Veuillez d'abord scanner un QR code.")
+    st.error("Aucun QR code n'a été scanné.")
     st.stop()
 
-st.write(f"ID de la batterie scannée : **{battery_id}**")
-
-# Construction du chemin CSV
 csv_path = f"data/{battery_id}.csv"
 
-# Vérifier si le fichier existe
-if os.path.exists(csv_path):
-    df = pd.read_csv(csv_path)
-    st.success("Données chargées avec succès 👇")
-    st.dataframe(df, use_container_width=True)
+if not os.path.exists(csv_path):
+    st.error(f"Fichier introuvable : {csv_path}")
+    st.stop()
+
+df = pd.read_csv(csv_path)
+
+st.write(f"### 🔋 Données de la batterie **{battery_id}**")
+st.dataframe(df, use_container_width=True)
+
+# ----------------------------------------------------------
+# PARTIE ADMIN : modification possible seulement si connecté
+# ----------------------------------------------------------
+if st.session_state.get("admin_logged_in"):
+
+    st.success("Mode Administrateur activé : vous pouvez modifier les données")
+
+    edited = st.data_editor(df, hide_index=True, num_rows="dynamic")
+
+    if st.button("💾 Sauvegarder les modifications"):
+        edited.to_csv(csv_path, index=False)
+        st.success("Modifications enregistrées ✔")
+
 else:
-    st.error(f"Aucun fichier CSV trouvé pour : {battery_id}")
-    st.info("Vérifiez que le fichier existe dans le dossier `/data` et qu'il porte le bon nom.")
+    st.info("Connexion admin requise pour modifier les données.")
