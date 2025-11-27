@@ -11,7 +11,7 @@ qr_value = st.text_input("QR détecté", key="qr_value", label_visibility="colla
 html_code = """
 <script src="https://unpkg.com/html5-qrcode"></script>
 
-<div id="reader" style="width: 320px; margin: auto"></div>
+<div id="reader" style="width: 500px; margin: auto"></div>
 
 <script>
 function onScanSuccess(decodedText, decodedResult) {
