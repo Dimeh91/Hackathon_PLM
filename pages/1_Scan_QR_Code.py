@@ -1,26 +1,54 @@
 import streamlit as st
-from PIL import Image
-from pyzbar.pyzbar import decode
-import io
+import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Scan QR Code", page_icon="📷")
+st.set_page_config(page_title="Scan QR Code", page_icon="📷", layout="wide")
 
-st.title("📷 Scan QR Code (server-side decoding)")
-st.write("Prenez en photo un QR code pour afficher les données.")
+st.title("📷 Scan QR Code")
+st.write("Scannez un QR code pour charger les données de la batterie.")
 
-img_file = st.camera_input("Scannez un QR code")
+# Input caché – reçoit la valeur depuis le JS
+qr_value = st.text_input("QR détecté", key="qr_value", label_visibility="collapsed")
 
-if img_file:
-    img = Image.open(img_file)
+# Scanner HTML + JS
+components.html(
+    """
+    <div id="reader" style="width: 350px"></div>
 
-    decoded = decode(img)
+    <script src="https://unpkg.com/html5-qrcode"></script>
 
-    if decoded:
-        qr_value = decoded[0].data.decode("utf-8")
-        st.success(f"QR détecté : **{qr_value}**")
+    <script>
+    function onScanSuccess(decodedText) {
+        // Trouver l'input Streamlit par son ID
+        const inputBox = window.parent.document.querySelector('input[id="qr_value"]');
 
-        st.session_state["battery_id"] = qr_value
+        if (inputBox) {
+            inputBox.value = decodedText;
+            inputBox.dispatchEvent(new Event('input', { bubbles: true }));
+        }
 
-        st.page_link("pages/2_Battery_Data.py", label="➡️ Voir les données")
-    else:
-        st.error("Aucun QR code détecté. Essayez de nouveau.")
+        alert("QR détecté : " + decodedText);
+    }
+
+    function onScanFailure(err) {}
+
+    const scanner = new Html5QrcodeScanner(
+        "reader",
+        { fps: 10, qrbox: 250 },
+        false
+    );
+
+    scanner.render(onScanSuccess, onScanFailure);
+    </script>
+    """,
+    height=500
+)
+
+# Lorsque la valeur change → on affiche les infos Streamlit
+if qr_value:
+    st.success(f"QR Code détecté : **{qr_value}**")
+
+    # On stocke le résultat dans la session
+    st.session_state["battery_id"] = qr_value
+
+    # Bouton vers la page Battery Data
+    st.page_link("pages/2_Battery_Data.py", label="➡️ Voir les données de la batterie")
