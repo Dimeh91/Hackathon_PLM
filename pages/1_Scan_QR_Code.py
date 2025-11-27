@@ -10,7 +10,7 @@ qr_value = st.text_input("QR détecté", key="qr_value", label_visibility="colla
 
 # HTML DIRECT (pas iframe)
 html_code = """
-<div id="reader" style="width: 320px; margin: auto;"></div>
+<div id="reader" style="width: 500px; margin: auto;"></div>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.7"></script>
 
